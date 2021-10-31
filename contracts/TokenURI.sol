@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./MekaWolfFactory.sol";
+import "./MekaWolfsFactory.sol";
 
 /**
  * @author Roi Di Segni (AKA @sheeeev66)
@@ -14,7 +14,14 @@ contract TokenURI is MekaWolfsFactory {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         string memory imageURI = svgToImageURI(
-            ""
+            string(
+                abi.encodePacked(
+                    '<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">',
+                        '<image href="', 'IPFS URI' ,'" height="200" width="200"/>',
+                        '<image href="', 'IPFS URI' ,'" height="200" width="200"/>',
+                    '</svg>;'
+                )
+            )
         );
 
         return string(
@@ -45,7 +52,7 @@ contract TokenURI is MekaWolfsFactory {
         );
     }
 
-    function svgToImageURI(string memory svg) public pure returns (string memory) {
+    function svgToImageURI(string memory svg) private pure returns (string memory) {
         string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(svg))));
         return string(abi.encodePacked("data:image/svg+xml;base64,", svgBase64Encoded));
     }
