@@ -8,32 +8,13 @@ pragma solidity ^0.8.0;
 
 import "./IERC3664Transferable.sol";
 import "./ERC3664Generic.sol";
-import "./ITokenHolder.sol";
 
 /**
  * @dev Implementation of the {ERC3664Transferable} interface.
  */
-contract ERC3664Transferable is IERC3664Transferable, ERC3664Generic {
-    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
-
+abstract contract ERC3664Transferable is ERC3664, IERC3664Transferable {
     // attribute ID => from token ID => to token ID
     mapping(uint256 => mapping(uint256 => uint256)) private _allowances;
-
-    address private _nft;
-
-    modifier onlyHolder(uint256 tokenId) {
-        require(
-            ITokenHolder(_nft).holderOf(tokenId) == _msgSender(),
-            "ERC3664Transferable: caller is not the nft holder"
-        );
-        _;
-    }
-
-    constructor(address nft) ERC3664Generic() {
-        _nft = nft;
-
-        _setupRole(TRANSFER_ROLE, _msgSender());
-    }
 
     /**
      * @dev See {IERC3664Transferable-isApproved}.
@@ -53,7 +34,7 @@ contract ERC3664Transferable is IERC3664Transferable, ERC3664Generic {
         uint256 from,
         uint256 to,
         uint256 attrId
-    ) public virtual override onlyHolder(from) {
+    ) public virtual override {
         require(
             from != 0,
             "ERC3664Transferable: approve from the zero address"
@@ -77,12 +58,6 @@ contract ERC3664Transferable is IERC3664Transferable, ERC3664Generic {
         uint256 to,
         uint256 attrId
     ) public virtual override {
-        address operator = _msgSender();
-        require(
-            ITokenHolder(_nft).holderOf(from) == operator ||
-                hasRole(TRANSFER_ROLE, operator),
-            "ERC3664Transferable: caller no transfer access"
-        );
         require(
             isApproved(from, to, attrId),
             "ERC3664Transferable: nft holder not approve the attribute to recipient"
@@ -92,7 +67,8 @@ contract ERC3664Transferable is IERC3664Transferable, ERC3664Generic {
             "ERC3664Transferable: recipient has attached the attribute"
         );
 
-        uint256 amount = _balances[attrId][from];
+        address operator = _msgSender();
+        uint256 amount = attrBalances[attrId][from];
         _beforeAttrTransfer(
             operator,
             from,
@@ -102,8 +78,8 @@ contract ERC3664Transferable is IERC3664Transferable, ERC3664Generic {
             ""
         );
 
-        _balances[attrId][to] = amount;
-        delete _balances[attrId][from];
+        attrBalances[attrId][to] = amount;
+        delete attrBalances[attrId][from];
         delete _allowances[attrId][from];
 
         emit TransferSingle(operator, from, to, attrId, amount);

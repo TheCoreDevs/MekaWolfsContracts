@@ -8,27 +8,18 @@ pragma solidity ^0.8.0;
 
 import "./IERC165.sol";
 
+/**
+ * @dev Required interface of an ERC3664 compliant contract.
+ */
 interface IERC3664 is IERC165 {
     /**
      * @dev Emitted when new attribute type `attrId` are minted.
      */
-    event NewAttribute(
-        address indexed operator,
+    event AttributeCreated(
         uint256 indexed attrId,
         string name,
         string symbol,
         string uri
-    );
-
-    /**
-     * @dev Equivalent to multiple {NewAttribute} events.
-     */
-    event NewAttributeBatch(
-        address indexed operator,
-        uint256[] indexed attrIds,
-        string[] names,
-        string[] symbols,
-        string[] uris
     );
 
     /**
@@ -63,6 +54,14 @@ interface IERC3664 is IERC165 {
         returns (uint256);
 
     /**
+     * @dev Returns the list of attributes in json format.
+     */
+    function printAttributes(uint256 tokenId)
+        external
+        view
+        returns (string memory);
+
+    /**
      * @dev Returns all attribute types of owned by `tokenId`.
      */
     function attributesOf(uint256 tokenId)
@@ -86,10 +85,10 @@ interface IERC3664 is IERC165 {
         view
         returns (uint256[] memory);
 
-    function textOf(uint256 tokenId, uint256 attrId)
-        external
-        view
-        returns (bytes memory);
+    /**
+     * @dev Set primary attribute type of owned by `tokenId`.
+     */
+    function setPrimaryAttribute(uint256 tokenId, uint256 attrId) external;
 
     /**
      * @dev Attaches `amount` value of attribute type `attrId` to `tokenId`.
@@ -97,9 +96,7 @@ interface IERC3664 is IERC165 {
     function attach(
         uint256 tokenId,
         uint256 attrId,
-        uint256 amount,
-        bytes memory text,
-        bool isPrimary
+        uint256 amount
     ) external;
 
     /**
@@ -108,7 +105,6 @@ interface IERC3664 is IERC165 {
     function batchAttach(
         uint256 tokenId,
         uint256[] calldata attrIds,
-        uint256[] calldata amounts,
-        bytes[] calldata texts
+        uint256[] calldata amounts
     ) external;
 }

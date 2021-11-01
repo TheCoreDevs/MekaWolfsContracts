@@ -19,8 +19,9 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
 
     event NewMekaWolfMinted(uint id);
 
-    constructor() ERC721("Meka Wolfs", "MKW") ERC3664Transferable(address(this)) { } // use token id 0?
-
+    constructor() ERC3664("") ERC721("Meka Wolfs", "MKW") {
+        
+    } // use token id 0?
 
     function _mintWolf(address to) internal {
         ERC721._safeMint(to, _tokenIds.current());
@@ -31,7 +32,5 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
     function _generateMetadata() private {
         
     }
-
-
 
 }
