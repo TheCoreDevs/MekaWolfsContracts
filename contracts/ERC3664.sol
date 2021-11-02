@@ -23,7 +23,7 @@ contract ERC3664 is Context, ERC165, IERC3664, IERC3664Metadata {
     }
 
     // Used as the URI for all attribute types by relying on ID substitution, e.g. https://attr-cdn-domain/{id}.json
-    string private _baseUri;
+    string internal _baseUri;
     // attrId => metadata
     mapping(uint256 => AttrMetadata) private _attrMetadatas;
     // attrId => tokenId => amount
