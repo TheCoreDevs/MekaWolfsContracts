@@ -16,16 +16,7 @@ contract TokenURI is MekaWolfsFactory {
     function tokenURI(uint tokenId) public view override returns(string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
-        string memory imageURI = svgToImageURI(
-            string(
-                abi.encodePacked(
-                    '<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">',
-                        '<image href="', 'IPFS URI' ,'" height="200" width="200"/>',
-                        '<image href="', 'IPFS URI' ,'" height="200" width="200"/>',
-                    '</svg>;'
-                )
-            )
-        );
+        string memory imageURI = svgToImageURI(imageSvg(tokenId));
 
         return string(
             abi.encodePacked(
@@ -56,27 +47,62 @@ contract TokenURI is MekaWolfsFactory {
 
         return
             bytes(_baseUri).length > 0 ?
-                string(abi.encodePacked("ipfs://", _baseUri, "/", ERC3664.symbol(attrId), "/", removeSpaces(ERC3664.name(attrId)))) :
+                string(abi.encodePacked("ipfs://", _baseUri, "/", ERC3664.symbol(attrId), "/", removeSpaces(ERC3664.name(attrId)), "")) :
                 "";
     }
 
     function printAttributes(uint tokenId) public view override returns(string memory) {
         bytes memory data = "";
-        uint256[] memory ma = attrs[tokenId];
-        for (uint256 i = 0; i < ma.length; i++) {
+        uint256[] memory ta = attrs[tokenId]; // token attributes
+        for (uint256 i = 0; i < ta.length; i++) {
             if (data.length > 0) {
                 data = abi.encodePacked(data, ",");
             }
             data = abi.encodePacked(
                 data,
                 '{"trait_type":"',
-                ERC3664.symbol(ma[i]),
+                ERC3664.symbol(ta[i]),
                 '","value":"',
-                ERC3664.name(ma[i]),
+                ERC3664.name(ta[i]),
                 '"}'
             );
         }
         return string(data);
+    }
+
+    function imageSvg(uint tokenId) private view returns(string memory) {
+        bytes memory svg = '<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">';
+        uint[] memory ta = attrs[tokenId]; // token attributes (ids)
+        uint[] memory ota = new uint[](6); // organized
+
+        string[6] memory symbols = [
+            "CHEST",
+            "HELMET",
+            "EYES",
+            "SNOUT",
+            "WEAPON",
+            "HANDS"
+        ]; // length = 6
+
+        for (uint i = 0; i < 6; i++) { // looping through the symbols
+            for (uint f = 0; f < 6; i++) { // looping through the attributes
+                if (
+                    keccak256(abi.encodePacked(symbols[i])) ==
+                    keccak256(abi.encodePacked(ERC3664.symbol(ta[f])))
+                ) {
+                   ota[i] = ta[f];
+                   break; 
+                }
+            }
+        }
+        for (uint i = 0; i < 6; i++) {
+            svg = abi.encodePacked(
+                svg,
+                '<image href="', attrURI(ota[i]) ,'" height="2700" width="2310"/>'
+            );
+        }
+        svg = abi.encodePacked(svg, '</svg>;');
+        return string(svg);
     }
 
     function svgToImageURI(string memory svg) private pure returns(string memory) {
