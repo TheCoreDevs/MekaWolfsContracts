@@ -73,17 +73,18 @@ contract TokenURI is MekaWolfsFactory {
     function imageSvg(uint tokenId) private view returns(string memory) {
         bytes memory svg = '<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">';
         uint[] memory ta = attrs[tokenId]; // token attributes (ids)
-        string[6] memory symbols = [
+        string[7] memory symbols = [
+            "BACKGROUND",
             "CHEST",
             "HELMET",
             "EYES",
             "SNOUT",
             "WEAPON",
             "HANDS"
-        ]; // length = 6
+        ]; // length = 7
 
-        for (uint i = 0; i < 6; i++) { // looping through the symbols
-            for (uint f = 0; f < 6; i++) { // looping through the attributes
+        for (uint i = 0; i < 7; i++) { // looping through the symbols
+            for (uint f = 0; f < 7; i++) { // looping through the attributes
                 if (
                     keccak256(abi.encodePacked(symbols[i])) ==
                     keccak256(abi.encodePacked(ERC3664.symbol(ta[f])))
