@@ -6,6 +6,7 @@ import "./ERC3664Transferable.sol";
 import "./ERC721.sol";
 import "./Ownable.sol";
 import "./Counters.sol";
+import "./IMekaWolfsMetadata.sol";
 
 contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
 
@@ -14,14 +15,22 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
     // tracks the token ID
     Counters.Counter private _tokenIds;
 
-    // call maxSupply() to get the amount of minted tokens
-    uint public maxSupply;
+    Counters.Counter private _attrIds;
+
+    IMekaWolfsMetadata metadata;
+
+    // call totalSupply() to get the amount of minted tokens
+    uint public totalSupply;
 
     event NewMekaWolfMinted(uint id);
 
     constructor() ERC3664("") ERC721("Meka Wolfs", "MKW") {
         // ERC3664._mint(attrId, _name, _symbol, _uri);
     } // use token id 0?
+
+    function setMetadataContract(address _address) external onlyOwner {
+        metadata = IMekaWolfsMetadata(_address);
+    }
 
     /**
      * How minting will work:
@@ -33,13 +42,36 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
      */
 
     function _mintWolf(address to) internal {
-        ERC721._safeMint(to, _tokenIds.current());
+        uint id = _tokenIds.current();
+        ERC721._safeMint(to, id);
+        _mintAndAttachMetadata(id);
         _tokenIds.increment();
-        maxSupply++;
+        totalSupply++;
     }
 
-    function _generateMetadata() private {
-        
+    function _mintAndAttachMetadata(uint tokenId) private {
+        _mintAndAttachNextAttr(tokenId, "BACKGROUND");
+        _mintAndAttachNextAttr(tokenId, "CHEST");
+        _mintAndAttachNextAttr(tokenId, "HELMET");
+        _mintAndAttachNextAttr(tokenId, "EYES");
+        _mintAndAttachNextAttr(tokenId, "SNOUT");
+        _mintAndAttachNextAttr(tokenId, "WEAPON");
+        _mintAndAttachNextAttr(tokenId, "HANDS");
+    }
+
+    function _mintAndAttachNextAttr(uint tokenId, string memory symbol) private {
+        _mintAndAttachAttr(
+            tokenId,
+            _attrIds.current(),
+            metadata.getRandomTrait(symbol),
+            symbol
+        );
+        _attrIds.increment();
+    }
+
+    function _mintAndAttachAttr(uint tokenId, uint attrId, string memory name, string memory symbol) private {
+        ERC3664._mint(attrId, name, symbol, "");
+        ERC3664.attach(tokenId, attrId, 1);
     }
 
     function supportsInterface(bytes4 interfaceId)
