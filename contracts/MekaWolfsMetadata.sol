@@ -25,4 +25,16 @@ contract MekaWolfsMetadata {
         
     }
 
+    function attrSymbols() external pure returns(string[7] memory) {
+        return [
+            "BACKGROUND",
+            "CHEST",
+            "HELMET",
+            "EYES",
+            "SNOUT",
+            "WEAPON",
+            "HANDS"
+        ];
+    }
+
 }

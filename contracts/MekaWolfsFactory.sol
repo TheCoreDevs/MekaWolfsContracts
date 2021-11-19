@@ -20,7 +20,7 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
     Counters.Counter private _tokenIds;
 
     // tracks the attribute IDs
-    Counters.Counter private _attrIds;
+    Counters.Counter internal _attrIds;
 
     IMekaWolfsMetadata internal metadata;
 
@@ -35,7 +35,9 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
 
     event NewMekaWolfMinted(uint id);
 
-    constructor() ERC3664("") ERC721("Meka Wolfs", "MKW") { } // use token id 0?
+    constructor() ERC3664("") ERC721("Meka Wolfs", "MKW") {
+        _tokenIds.increment();
+    } // token ID 0 will be used as the null ID
 
     function setMetadataContract(address _address) external onlyOwner {
         metadata = IMekaWolfsMetadata(_address);
@@ -70,8 +72,7 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
 
     function _mintAndAttachNextAttr(uint tokenId, string memory symbol) private {
         uint attrId = _attrIds.current();
-        ownerOfAttr[attrId] = msg.sender;
-        attrBalanceOf[msg.sender]++;
+
         _mintAndAttachAttr(
             tokenId,
             attrId,
@@ -83,8 +84,14 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
     }
 
     function _mintAndAttachAttr(uint tokenId, uint attrId, string memory name, string memory symbol) private {
-        ERC3664._mint(attrId, name, symbol, "");
+        _mintAttr(attrId, name, symbol);
         ERC3664.attach(tokenId, attrId, 1);
+    }
+
+    function _mintAttr(uint attrId, string memory name, string memory symbol) internal {
+        ERC3664._mint(attrId, name, symbol, "");
+        ownerOfAttr[attrId] = msg.sender;
+        attrBalanceOf[msg.sender]++;
     }
 
     function supportsInterface(bytes4 interfaceId)
