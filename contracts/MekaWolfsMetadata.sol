@@ -2,6 +2,10 @@
 
 pragma solidity ^0.8.0;
 
+/**
+ * @author Roi Di Segni (A.K.A. @sheeeev66)
+ */
+
 contract MekaWolfsMetadata {
 
     struct Trait {

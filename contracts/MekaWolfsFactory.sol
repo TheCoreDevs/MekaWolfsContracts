@@ -8,6 +8,10 @@ import "./Ownable.sol";
 import "./Counters.sol";
 import "./IMekaWolfsMetadata.sol";
 
+/**
+ * @author Roi Di Segni (A.K.A. @sheeeev66)
+ */
+
 contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
 
     using Counters for Counters.Counter;
