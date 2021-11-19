@@ -22,10 +22,16 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
     // tracks the attribute IDs
     Counters.Counter private _attrIds;
 
-    IMekaWolfsMetadata metadata;
+    IMekaWolfsMetadata internal metadata;
 
     // call totalSupply() to get the amount of minted tokens
     uint public totalSupply;
+
+    // owner of the attribute
+    mapping(uint => address) ownerOfAttr;
+
+    // how many attributes someone owns
+    mapping(address => uint) attrBalanceOf;
 
     event NewMekaWolfMinted(uint id);
 
@@ -63,9 +69,12 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
     }
 
     function _mintAndAttachNextAttr(uint tokenId, string memory symbol) private {
+        uint attrId = _attrIds.current();
+        ownerOfAttr[attrId] = msg.sender;
+        attrBalanceOf[msg.sender]++;
         _mintAndAttachAttr(
             tokenId,
-            _attrIds.current(),
+            attrId,
             metadata.getRandomTrait(symbol),
             symbol
         );
