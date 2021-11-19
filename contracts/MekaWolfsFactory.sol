@@ -70,6 +70,7 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
             symbol
         );
         _attrIds.increment();
+        
     }
 
     function _mintAndAttachAttr(uint tokenId, uint attrId, string memory name, string memory symbol) private {
