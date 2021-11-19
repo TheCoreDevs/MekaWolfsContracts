@@ -19,6 +19,7 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
     // tracks the token ID
     Counters.Counter private _tokenIds;
 
+    // tracks the attribute IDs
     Counters.Counter private _attrIds;
 
     IMekaWolfsMetadata metadata;
