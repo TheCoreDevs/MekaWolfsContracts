@@ -13,7 +13,7 @@ import "./IERC165.sol";
 
 interface IERC is IERC165 {
     /**
-     * @dev This emits when ownership of any unattached attribute changes by any mechanism.
+     * @dev This emits when ownership of any unatached attribute changes by any mechanism.
      *  This event emits when Attributes are created (`from` == 0) and destroyed
      *  (`to` == 0). Exception: during contract creation, any number of attributes
      *  may be created and assigned without emitting Transfer. At the time of
@@ -22,7 +22,7 @@ interface IERC is IERC165 {
      */
     event AttrTransfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
 
-    event Attach(uint indexed _attrId, uint indexed _tokenId, address indexed owner);
+    event Atach(uint indexed _attrId, uint indexed _tokenId, address indexed owner);
 
     event Dettach(uint indexed _attrId, uint indexed _tokenId);
 
@@ -43,52 +43,52 @@ interface IERC is IERC165 {
     event AttrApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
 
     /**
-     * @notice gets the token `_attrId` is attached to (if it is attached).
-     * @dev Throws if `_attrId` isn't attached to a token. 
+     * @notice gets the token `_attrId` is atached to (if it is atached).
+     * @dev Throws if `_attrId` isn't atached to a token. 
        @return a token id.
      */
-    function attachedTo(uint _attrId) external view returns (uint);
+    function atachedTo(uint _attrId) external view returns (uint);
 
     /**
-     * @return the address that owns the unattached attribute.
-     * @dev Throws if `_attrId` is attached to a token.
+     * @return the address that owns the unatached attribute.
+     * @dev Throws if `_attrId` is atached to a token.
      * NOTE: this mimics the ERC721 `ownerOf` fuction
      */
     function ownerOfAttr(uint _attrId) external view returns (address);
 
     /**
-     * @dev gets the amount of unattached attributes `_owner` holds.
+     * @dev gets the amount of unatached attributes `_owner` holds.
      * NOTE: this mimics the ERC721 `balanceOf` function
      */
     function attrBalanceOf(address _owner) external view returns (uint);
 
     /**
-     * @notice attaches an attribute to an NFT
+     * @notice ataches an attribute to an NFT
      * @dev Throws unless `msg.sender` is the current owner, an authorized 
      *  operator, or the approved address for both the attribute and the NFT.
      *  Throws if `_attrId` is not a valid attribute. Throws if `_tokenId` is
      *  not a valid NFT. Throws an attribute of the same type as `_attrId` is
-     *  already attached to `_tokenId`.
+     *  already atached to `_tokenId`.
      *  Clears the ownership of `_attrId` but does not burn it.
      *  Clears approvals for `_attrId`.
-     * @param _attrId The attribute Id to attach
-     * @param _tokenId The NFT Id to attach to 
+     * @param _attrId The attribute Id to atach
+     * @param _tokenId The NFT Id to atach to 
      */
-	function attach(uint _attrId, uint _tokenId) external payable;
+	function atach(uint _attrId, uint _tokenId) external payable;
 
     /**
      * @notice detaches an attribute from an NFT to the NFT owner.
      * @dev Throws unless `msg.sender` is the current owner, an authorized 
-     *  operator, or the approved address of the NFT that the attribute is attached to.
-     *  Throws if `_attrId` is not attached to a token.
+     *  operator, or the approved address of the NFT that the attribute is atached to.
+     *  Throws if `_attrId` is not atached to a token.
      * @param _attrId The attribute Id to dettach 
      */
 	function dettach(uint _attrId) external payable;
 
     /**
-     * @notice Replaces the attribute which is attached to an NFT with another
+     * @notice Replaces the attribute which is atached to an NFT with another
      *  attribute of the same type.
-     * @dev Works like {dettach} and {attach} in the same function.
+     * @dev Works like {dettach} and {atach} in the same function.
      */
     function replaceAttr(uint _attrId, uint _tokenId) external payable;
 
@@ -97,7 +97,7 @@ interface IERC is IERC165 {
      * @dev Throws unless `msg.sender` is the current owner, an authorized
      *  operator, or the approved address for this attribute. Throws if `_from` is
      *  not the current owner. Throws if `_to` is the zero address. Throws if
-     *  `_attrId` is not a valid attribute. Throws if `_attrId` is attached to an NFT.
+     *  `_attrId` is not a valid attribute. Throws if `_attrId` is atached to an NFT.
 	 *  When transfer is complete, this function checks if `_to` is a smart contract
 	 *  (code size > 0). If so, it calls `onERC721Received` on `_to` and throws if the
 	 *  return value is not `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`.
@@ -127,7 +127,7 @@ interface IERC is IERC165 {
      * @dev Throws unless `msg.sender` is the current owner, an authorized
      *  operator, or the approved address for this attribute. Throws if `_from` is
      *  not the current owner. Throws if `_to` is the zero address. Throws if
-     *  `_attrId` is not a valid attribute. Throws if `_attrId` is attached to an NFT.
+     *  `_attrId` is not a valid attribute. Throws if `_attrId` is atached to an NFT.
      * @param _from The current owner of the attribute
      * @param _to The new owner
      * @param _attrId The attribute to transfer
@@ -176,7 +176,7 @@ interface IERC is IERC165 {
     function isAttrApprovedForAll(address _owner, address _operator) external view returns (bool);
 
     /**
-     * @dev gets all the attributes that are attached to `_tokenId`.
+     * @dev gets all the attributes that are atached to `_tokenId`.
      * @return an array of  attribute type ids
      */
     function attrsOf(uint _tokenId) external view returns (uint[] memory);
