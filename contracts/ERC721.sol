@@ -24,12 +24,6 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     using Address for address;
     using Strings for uint256;
 
-    // Token name
-    string private _name;
-
-    // Token symbol
-    string private _symbol;
-
     // Mapping from token ID to owner address
     mapping(uint256 => address) private _owners;
 
@@ -41,14 +35,6 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
-
-    /**
-     * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
-     */
-    constructor(string memory name_, string memory symbol_) {
-        _name = name_;
-        _symbol = symbol_;
-    }
 
     /**
      * @dev See {IERC165-supportsInterface}.
@@ -81,14 +67,14 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      * @dev See {IERC721Metadata-name}.
      */
     function name() public view virtual override returns (string memory) {
-        return _name;
+        return "Meka Wolfs";
     }
 
     /**
      * @dev See {IERC721Metadata-symbol}.
      */
     function symbol() public view virtual override returns (string memory) {
-        return _symbol;
+        return "MKW";
     }
 
     /**
@@ -152,9 +138,6 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         address to,
         uint256 tokenId
     ) public virtual override {
-        //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
-
         _transfer(from, to, tokenId);
     }
 
@@ -178,7 +161,6 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         uint256 tokenId,
         bytes memory _data
     ) public virtual override {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
         _safeTransfer(from, to, tokenId, _data);
     }
 
@@ -229,10 +211,13 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      *
      * - `tokenId` must exist.
      */
-    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual returns (bool) {
-        require(_exists(tokenId), "ERC721: operator query for nonexistent token");
-        address owner = ERC721.ownerOf(tokenId);
-        return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
+    function _isApprovedOrOwner(address owner, address spender, uint256 tokenId) internal view virtual {
+        require(
+            spender == owner ||
+            getApproved(tokenId) == spender || 
+            isApprovedForAll(owner, spender),
+            "ERC721: transfer caller is not owner nor approved"
+        );
     }
 
     /**
@@ -331,6 +316,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     ) internal virtual {
         require(ERC721.ownerOf(tokenId) == from, "ERC721: transfer of token that is not own");
         require(to != address(0), "ERC721: transfer to the zero address");
+        _isApprovedOrOwner(from, _msgSender(), tokenId);
 
         _beforeTokenTransfer(from, to, tokenId);
 

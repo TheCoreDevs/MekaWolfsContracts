@@ -35,7 +35,7 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
 
     event NewMekaWolfMinted(uint id);
 
-    constructor() ERC3664("") ERC721("Meka Wolfs", "MKW") {
+    constructor() {
         _tokenIds.increment();
     } // token ID 0 will be used as the null ID
 
@@ -92,6 +92,30 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
         ERC3664._mint(attrId, name, symbol, "");
         ownerOfAttr[attrId] = msg.sender;
         attrBalanceOf[msg.sender]++;
+    }
+
+    // function _burnAttr(uint attrId, string memory name, string memory symbol) internal {
+    //     require();
+    //     ERC3664._burn(tokenId, attrId, amount);
+    // }
+
+    function _burnAttrFromToken(uint tokenId, uint attrId) internal {
+        address owner = ownerOfAttr[attrId];
+
+        uint256 tokenBalance = attrBalances[attrId][tokenId];
+        require(
+            tokenBalance >= amount,
+            "ERC3664: insufficient balance for transfer"
+        );
+
+        attrBalanceOf[owner] -= 1;
+        delete ownerOfAttr[attrId];
+
+        unchecked {
+            attrBalances[attrId][tokenId] = tokenBalance - amount;
+        }
+
+        emit TransferSingle(owner, tokenId, 0, attrId, 1);
     }
 
     function supportsInterface(bytes4 interfaceId)
