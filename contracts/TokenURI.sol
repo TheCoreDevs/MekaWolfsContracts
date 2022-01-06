@@ -2,18 +2,18 @@
 
 pragma solidity ^0.8.0;
 
-import "./MekaWolfsFactory.sol";
+import "./ERC.sol";
 import "./Base64.sol";
-import "./StringExternalView.sol";
 
 /**
  * @author Roi Di Segni (AKA @sheeeev66)
  */
 
-contract TokenURI is MekaWolfsFactory {
+contract TokenURI is AttrTokens {
 
     using Strings for uint256;
-    using StringExternalView for string;
+
+    string internal _baseAttrURI;
 
     function tokenURI(uint tokenId) public view override returns(string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
@@ -40,22 +40,32 @@ contract TokenURI is MekaWolfsFactory {
             )
         );
     }
-
-    function attrURI(uint attrId) public view override returns(string memory) {
+    
+    /**
+     * @notice returns the attributes image, if the attribute value is 0, it returns the default image
+     * @dev Explain to a developer any extra details
+     * @param _attrId the attribute ID
+     * @return Documents the return variables of a contract’s function state variable
+     */
+    function attrURI(uint _attrId) private view returns(string memory) {
         require(
-            _attrExists(attrId),
-            "ERC3664: URI query for nonexistent attribute"
+            _attrOwners[_attrId] != address(0) &&  _atachedTo[_attrId] != 0,
+            "ERC: URI query for nonexistent attribute"
         );
 
+        string memory base = _baseAttrURI;
+
         return
-            bytes(_baseUri).length > 0 ?
-                string(abi.encodePacked("ipfs://", _baseUri, "/", ERC3664.symbol(attrId), "/", (ERC3664.name(attrId)).removeSpaces(), "")) :
-                "";
+            bytes(base).length > 0 ?
+                string(abi.encodePacked(base, "/", attrs[_attrId].trait_type, "/", attrs[_attrId].value)) :
+                string(abi.encodePacked(base, "/", attrs[_attrId].trait_type, "/", bytes1(0x30)));
     }
 
-    function printAttributes(uint tokenId) public view override returns(string memory) {
+    
+
+    function printAttributes(uint tokenId) public view returns(string memory) {
         bytes memory data = "";
-        uint256[] memory ta = attrs[tokenId]; // token attributes
+        uint256[8] memory ta = _attrsOf[tokenId]; // token attributes
         for (uint256 i = 0; i < ta.length; i++) {
             if (data.length > 0) {
                 data = abi.encodePacked(data, ",");
@@ -63,9 +73,9 @@ contract TokenURI is MekaWolfsFactory {
             data = abi.encodePacked(
                 data,
                 '{"trait_type":"',
-                ERC3664.symbol(ta[i]),
+                i, 
                 '","value":"',
-                ERC3664.name(ta[i]),
+                attrs[ta[i]].value,
                 '"}'
             );
         }
@@ -73,31 +83,14 @@ contract TokenURI is MekaWolfsFactory {
     }
 
     function imageSvg(uint tokenId) private view returns(string memory) {
-        bytes memory svg = '<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">';
-        uint[] memory ta = attrs[tokenId]; // token attributes (ids)
-        string[7] memory symbols = [
-            "BACKGROUND",
-            "CHEST",
-            "HELMET",
-            "EYES",
-            "SNOUT",
-            "WEAPON",
-            "HANDS"
-        ]; // length = 7
-
-        for (uint i = 0; i < 7; i++) { // looping through the symbols
-            for (uint f = 0; f < 7; i++) { // looping through the attributes
-                if (
-                    keccak256(abi.encodePacked(symbols[i])) ==
-                    keccak256(abi.encodePacked(ERC3664.symbol(ta[f])))
-                ) {
-                    svg = abi.encodePacked(
-                        svg,
-                        '<image href="', attrURI(ta[f]) ,'" height="2700" width="2310"/>'
-                    );
-                    break; 
-                }
-            }
+        bytes memory svg = '<svg width="2700" height="2310" xmlns="http://www.w3.org/2000/svg">';
+        uint[8] memory ta = _attrsOf[tokenId]; // token attributes (ids)
+        
+        for (uint i; i < 8; i++) {
+            svg = abi.encodePacked(
+                svg, 
+                '<image href="', attrURI(ta[i]) ,'" height="2700" width="2310"/>'
+            );
         }
         svg = abi.encodePacked(svg, '</svg>;');
         return string(svg);

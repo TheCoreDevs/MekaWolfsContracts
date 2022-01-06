@@ -2,11 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "./ERC3664Transferable.sol";
 import "./ERC721.sol";
 import "./Ownable.sol";
-import "./Counters.sol";
-import "./IMekaWolfsMetadata.sol";
 
 /**
  * @author Roi Di Segni (A.K.A. @sheeeev66)
@@ -55,25 +52,25 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
     function _mintWolf(address to) internal {
         uint id = _tokenIds.current();
         ERC721._safeMint(to, id);
-        _mintAndAttachMetadata(id);
+        _mintAndAtachMetadata(id);
         _tokenIds.increment();
         totalSupply++;
     }
 
-    function _mintAndAttachMetadata(uint tokenId) private {
-        _mintAndAttachNextAttr(tokenId, "BACKGROUND");
-        _mintAndAttachNextAttr(tokenId, "CHEST");
-        _mintAndAttachNextAttr(tokenId, "HELMET");
-        _mintAndAttachNextAttr(tokenId, "EYES");
-        _mintAndAttachNextAttr(tokenId, "SNOUT");
-        _mintAndAttachNextAttr(tokenId, "WEAPON");
-        _mintAndAttachNextAttr(tokenId, "HANDS");
+    function _mintAndAtachMetadata(uint tokenId) private {
+        _mintAndAtachNextAttr(tokenId, "BACKGROUND");
+        _mintAndAtachNextAttr(tokenId, "CHEST");
+        _mintAndAtachNextAttr(tokenId, "HELMET");
+        _mintAndAtachNextAttr(tokenId, "EYES");
+        _mintAndAtachNextAttr(tokenId, "SNOUT");
+        _mintAndAtachNextAttr(tokenId, "WEAPON");
+        _mintAndAtachNextAttr(tokenId, "HANDS");
     }
 
-    function _mintAndAttachNextAttr(uint tokenId, string memory symbol) private {
+    function _mintAndAtachNextAttr(uint tokenId, string memory symbol) private {
         uint attrId = _attrIds.current();
 
-        _mintAndAttachAttr(
+        _mintAndAtachAttr(
             tokenId,
             attrId,
             metadata.getRandomTrait(symbol),
@@ -83,9 +80,9 @@ contract MekaWolfsFactory is Ownable, ERC3664Transferable, ERC721 {
         
     }
 
-    function _mintAndAttachAttr(uint tokenId, uint attrId, string memory name, string memory symbol) private {
+    function _mintAndAtachAttr(uint tokenId, uint attrId, string memory name, string memory symbol) private {
         _mintAttr(attrId, name, symbol);
-        ERC3664.attach(tokenId, attrId, 1);
+        ERC3664.atach(tokenId, attrId, 1);
     }
 
     function _mintAttr(uint attrId, string memory name, string memory symbol) internal {

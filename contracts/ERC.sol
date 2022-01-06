@@ -11,7 +11,7 @@ import "./ERC721.sol";
 import "./IERC.sol";
 import "./IERCReceiver.sol";
 
-enum TraitType {background, weapon, chest, helmet, arms, eyes, snout}
+enum TraitType {background, weapon, legs, chest, helmet, arms, eyes, snout}
 
 contract AttrTokens is ERC721, IERC {
 
@@ -25,10 +25,10 @@ contract AttrTokens is ERC721, IERC {
     Attr[] public attrs;
 
     // Mapping from attribute token ID to owner address
-    mapping(uint256 => address) private _attrOwners;
+    mapping(uint256 => address) internal _attrOwners;
 
     // Mapping owner address to attribute token count
-    mapping(address => uint256) private _attrBalances;
+    mapping(address => uint256) internal _attrBalances;
 
     // Mapping from attribute token ID to approved address
     mapping(uint256 => address) private _attrTokenApprovals;
@@ -40,7 +40,7 @@ contract AttrTokens is ERC721, IERC {
     mapping(uint => uint) _atachedTo;
 
     // Mapping from NFT ID to atached attribute token IDs
-    mapping(uint => uint[6]) public _attrsOf;
+    mapping(uint => uint[8]) internal _attrsOf;
 
     // modifier sameOwner(uint _attrId, uint _tokenId) {
     //     require(
@@ -364,9 +364,11 @@ contract AttrTokens is ERC721, IERC {
 
         _atachedTo[_attrId] = _tokenId;
         _attrsOf[_tokenId][uint(_traitType)] = _attrId;
+
+        // Attach event goes outside of this method to avoid reading from storage
     }
 
-    function _mintERC721(address to, uint256 _tokenId) internal {
+    function _mintWithTraits(address to, uint256 _tokenId) internal {
         require(to != address(0), "ERC721: mint to the zero address");
         require(!_exists(_tokenId), "ERC721: token already minted");
 
@@ -375,11 +377,33 @@ contract AttrTokens is ERC721, IERC {
         
         uint _attrId;
 
-        // _mintAndAtach
+        // make a check for 1/1s
+
+        _mintAndAtach(_tokenId, _attrId, TraitType.background, 0 /* randomize with priority */);
         emit Atach(_attrId, _tokenId, to);
+        _attrId++;
+        _mintAndAtach(_tokenId, _attrId, TraitType.chest, 0 /* randomize with priority */);
+        emit Atach(_attrId, _tokenId, to);
+        _attrId++;
+        _mintAndAtach(_tokenId, _attrId, TraitType.helmet, 0 /* randomize with priority */);
+        emit Atach(_attrId, _tokenId, to);
+        _attrId++;
+        _mintAndAtach(_tokenId, _attrId, TraitType.arms, 0 /* randomize with priority */);
+        emit Atach(_attrId, _tokenId, to);
+        _attrId++;
+        _mintAndAtach(_tokenId, _attrId, TraitType.eyes, 0 /* randomize with priority */);
+        emit Atach(_attrId, _tokenId, to);
+        _attrId++;
+        _mintAndAtach(_tokenId, _attrId, TraitType.snout, 0 /* randomize with priority */);
+        emit Atach(_attrId, _tokenId, to);
+        _attrId++;
 
 
         emit Transfer(address(0), to, _tokenId);
+    }
+
+    function _getRandomNumber() private view returns(uint) {
+        return uint(keccak256(abi.encodePacked(block.difficulty, msg.sender)));
     }
 
 }

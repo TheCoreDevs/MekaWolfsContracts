@@ -2,15 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "./TokenURI.sol";
-
 /**
  * @author Roi Di Segni (A.K.A. @sheeeev66)
  */
 
-contract MekaMachine is TokenURI {
-
-    using Counters for Counters.Counter;
+contract MekaMachine {
 
     uint private nonce;
 
