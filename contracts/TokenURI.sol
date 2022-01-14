@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "./ERC.sol";
 import "./Base64.sol";
+import "./Strings.sol";
 
 /**
  * @author Roi Di Segni (AKA @sheeeev66)

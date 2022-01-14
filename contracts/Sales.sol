@@ -3,29 +3,41 @@ pragma solidity ^0.8.0;
 
 import "./TokenURI.sol";
 import "./Ownable.sol";
+import "./ECDSA.sol";
+import "./Strings.sol";
 import "./IERC2981.sol";
 import "./IERC20.sol";
+import "./IgWolfs.sol";
 
 
 contract Sales is TokenURI, Ownable {
+    using Strings for uint256;
 
-    uint _tokenIdTracker;
+    
+    uint32 public saleCounter;
+    uint16 public reserve = 888;
 
-    string public baseURI;
-    uint8 public reserve = 200;
     bool public mintingEnabled;
-    bool public onlyWhitelisted;
+    bool public preMintEnabled;
+    string public baseURI;
+
+    address royaltyReciever;
+
+    IgWolfs constant gWolfs = IgWolfs(0x3302F0674f316584092C15B865b9e5C8f10751D2);
   
-    mapping(address => uint32) public addressMintedBalance;
+    // mapping(address => uint32) public addressMintedBalance;
     mapping(bytes => bool) public usedSigs;
 
-    function supportsInterface(bytes4 _interfaceId) public view virtual override(IERC165) returns (bool) {
-        return _interfaceId == type(IERC2981).interfaceId || super.supportsInterface(_interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AttrTokens) returns (bool) {
+        return
+            interfaceId == type(IERC2981).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
-    function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view override returns (address receiver, uint256 royaltyAmount) {
-        require(_exists(_tokenId), "ERC2981RoyaltyStandard: Royalty info for nonexistent token");
-        return (owner(), _salePrice / 10); // 10 percent
+
+    function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view returns (address, uint256) {
+        require(_exists(_tokenId), "ERC2981: Royalty info for nonexistent token");
+        return (royaltyReciever, _salePrice / 10); // 10 percent
     }
 
     function mint(uint32 _mintAmount) public payable {
@@ -35,72 +47,53 @@ contract Sales is TokenURI, Ownable {
     // public
     function mint(uint32 _mintAmount, bytes memory _signature) public payable {
         require(msg.value == 1e17 * uint(_mintAmount), "Ethereum amount sent is not correct!");
-        require(addressMintedBalance[msg.sender] + _mintAmount <= 10 && _mintAmount != 0,"Invalid can not mint more than 10!");
-        
+        // require(addressMintedBalance[msg.sender] + _mintAmount <= 10 && _mintAmount != 0,"Invalid can not mint more than 10!");
+        saleCounter += _mintAmount;
+
         if (!mintingEnabled) {            
-            require(onlyWhitelisted, "Minting is not enabled!");
-            require(isWhitelisted(msg.sender, _signature), "User is not whitelisted!");            
-            _mintLoop(msg.sender, _mintAmount);
+            require(preMintEnabled, "Minting is not enabled!");
+            require(saleCounter <= 1000, "Request will exceed max supply!");
+            require(_validiateSig(msg.sender, "whitelist", _signature), "User is not whitelisted!");
+            _batchMint(msg.sender, _mintAmount);
             return;
         }
-        require(totalSupply() + _mintAmount < 9_800, "Request will exceed max supply!");
-        _mintLoop(msg.sender, _mintAmount);
+        require(saleCounter <= 8000, "Request will exceed max supply!");
+        _batchMint(msg.sender, _mintAmount);
     }
 
-    function _mintLoop(address to, uint32 amount) private {
-        addressMintedBalance[to] += amount;
-        for (uint i; i < amount; i++ ) {
-            _safeMint(to, _tokenIdTracker.current());
-            _tokenIdTracker.increment();
-        }
-    }
-
-    function freeMint(bytes calldata _signature, uint _addressAirDropNumber) public {
+    function freeMint(bytes calldata _signature, string memory nonce) public {
         require(reserve > 0, "No more tokens left in reserve!");
         require(!usedSigs[_signature], "Can only use a claim signature once!");
-        require(canClaimAirdrop(msg.sender, _signature, _addressAirDropNumber), "User not eligable to claim an airdrop!");
+        require(_validiateSig(msg.sender, nonce, _signature), "User not eligable to claim an airdrop!");
         usedSigs[_signature] = true;
-        _safeMint(msg.sender, _tokenIdTracker.current());
-        _tokenIdTracker.increment();
-        addressMintedBalance[msg.sender]++;
+        _mint(msg.sender);
+        // addressMintedBalance[msg.sender]++;
         reserve--;
     }
 
-    function isWhitelisted(address _wallet, bytes memory _signature) private view returns(bool) {
-        return ECDSA.recover(
-            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_wallet, "whitelist"))),
-            _signature
-        ) == owner();
-    }
-
-    function canClaimAirdrop(address _wallet,bytes calldata _signature,uint256 _addressAirDropNumber) private view returns(bool) {
-        return ECDSA.recover(
-            // if it's the address's 3rd airdrop so _addressAirDropNumber = 3
-            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_wallet, "airdrop", _addressAirDropNumber.toString()))),
-            _signature
-        ) == owner();
-    }
-
-    function walletOfOwner(address _owner) public view returns (uint256[] memory) {
-        uint256 ownerTokenCount = balanceOf(_owner);
-        uint256[] memory tokenIds = new uint256[](ownerTokenCount);
-        for (uint256 i; i < ownerTokenCount; i++) {
-            tokenIds[i] = tokenOfOwnerByIndex(_owner, i);
-        }
-        return tokenIds;
-    }
-
-    function tokenURI(uint256 tokenId) public view override returns (string memory)
-    {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
-        return string(abi.encodePacked(baseURI, tokenId.toString(), ".json"));
-    }
-
-    //only owner
-    function ownerMintFromReserve(uint8 amount) public onlyOwner {
+    function ownerMintFromReserve(uint8 amount) external onlyOwner {
         require(reserve >= amount, "Not enough tokens left in reserve!");
-        _mintLoop(msg.sender, amount);
+        _batchMint(msg.sender, amount);
         reserve -= amount;
+    }
+
+    function airdropToHolders() external onlyOwner { // might want to change this to work more efficiantly
+        for (uint16 i; i < 1700; i++) _mint(gWolfs.getTokenHolder(i));
+        reserve -= 1700;
+    }
+
+    function airDropToHolders(address[] calldata holder, uint[] calldata amount) external onlyOwner { // check if this is cheeper
+        require(holder.length == amount.length);
+
+        for (uint16 i; i < holder.length; i++) _batchMint(holder[i], amount[i]);
+        reserve -= 1700;
+    }
+
+    function _validiateSig(address _wallet, string memory s, bytes memory _signature) private view returns(bool) {
+        return ECDSA.recover(
+            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_wallet, s))),
+            _signature
+        ) == owner();
     }
 
     function setBaseURI(string memory _newBaseURI) external onlyOwner {
@@ -111,8 +104,8 @@ contract Sales is TokenURI, Ownable {
         mintingEnabled = !mintingEnabled;
     }
 
-    function toggleOnlyWhitelisted() external onlyOwner {
-        onlyWhitelisted = !onlyWhitelisted;
+    function togglePreMint() external onlyOwner {
+        preMintEnabled = !preMintEnabled;
     }
 
     function withdraw() external onlyOwner {
@@ -128,7 +121,7 @@ contract Sales is TokenURI, Ownable {
         require(token.transfer(msg.sender, token.balanceOf(address(this))));
     }
 
-    function withdrawETH() external onlyOwner {
-        payable(msg.sender).transfer(address(this).balance);
+    function setRoyaltyReciever(address _address) external onlyOwner {
+        royaltyReciever = _address;
     }
 }

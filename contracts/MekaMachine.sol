@@ -22,12 +22,12 @@ contract MekaMachine {
         
     }
 
-    function _getRandomTraitSymbol() private view returns(string memory) {
-        uint rand = uint(
+    function _getRandomTraitSymbol() private view returns(uint8) {
+        uint8 rand = uint(
             keccak256(
                 abi.encodePacked(msg.sender, block.difficulty, nonce)
             )
         ) % 7; // returns a number between 0 - 6 (7 different variables)
-        return metadata.attrSymbols()[rand];
+        return rand;
     }
 }

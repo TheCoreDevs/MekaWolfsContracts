@@ -12,7 +12,6 @@ import "./IERC721Receiver.sol";
 import "./IERC721Metadata.sol";
 import "./Address.sol";
 import "./Context.sol";
-import "./Strings.sol";
 import "./ERC165.sol";
 
 /**
@@ -22,7 +21,9 @@ import "./ERC165.sol";
  */
 contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     using Address for address;
-    using Strings for uint256;
+    // using Strings for uint256;
+
+    uint _tokenIdTracker;
 
     // Mapping from token ID to owner address
     mapping(uint256 => address) internal _owners;
@@ -220,35 +221,35 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         );
     }
 
-    /**
-     * @dev Safely mints `tokenId` and transfers it to `to`.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must not exist.
-     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-     *
-     * Emits a {Transfer} event.
-     */
-    function _safeMint(address to, uint256 tokenId) internal virtual {
-        _safeMint(to, tokenId, "");
-    }
+    // /**
+    //  * @dev Safely mints `tokenId` and transfers it to `to`.
+    //  *
+    //  * Requirements:
+    //  *
+    //  * - `tokenId` must not exist.
+    //  * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+    //  *
+    //  * Emits a {Transfer} event.
+    //  */
+    // function _safeMint(address to, uint256 tokenId) internal virtual {
+    //     _safeMint(to, tokenId, "");
+    // }
 
-    /**
-     * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
-     * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
-     */
-    function _safeMint(
-        address to,
-        uint256 tokenId,
-        bytes memory _data
-    ) internal virtual {
-        _mint(to, tokenId);
-        require(
-            _checkOnERC721Received(address(0), to, tokenId, _data),
-            "ERC721: transfer to non ERC721Receiver implementer"
-        );
-    }
+    // /**
+    //  * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
+    //  * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
+    //  */
+    // function _safeMint(
+    //     address to,
+    //     uint256 tokenId,
+    //     bytes memory _data
+    // ) internal virtual {
+    //     _mint(to, tokenId);
+    //     require(
+    //         _checkOnERC721Received(address(0), to, tokenId, _data),
+    //         "ERC721: transfer to non ERC721Receiver implementer"
+    //     );
+    // }
 
     /**
      * @dev Mints `tokenId` and transfers it to `to`.
@@ -262,16 +263,32 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      *
      * Emits a {Transfer} event.
      */
-    function _mint(address to, uint256 tokenId) internal virtual {
-        require(to != address(0), "ERC721: mint to the zero address");
-        require(!_exists(tokenId), "ERC721: token already minted");
+    function _mint(address to) internal {
+        uint id = _tokenIdTracker;
+        _balances[to]++;
+        __partMintFunc(to, id);
+    }
 
-        _beforeTokenTransfer(address(0), to, tokenId);
+    function _batchMint(address to, uint amount) internal {
+        _balances[to] += amount;
+        uint id;
+        
+        for (uint i; i < amount; i++) {
+            id = _tokenIdTracker;
+            __partMintFunc(to, id);
+        }
+    }
 
-        _balances[to] += 1;
-        _owners[tokenId] = to;
+    function __partMintFunc(address to, uint id) private {
+        _owners[id] = to;
+        _tokenIdTracker++;
 
-        emit Transfer(address(0), to, tokenId);
+        emit Transfer(address(0), to, id);
+
+        require(
+            _checkOnERC721Received(address(0), to, id, ""),
+            "ERC721: transfer to non ERC721Receiver implementer"
+        );
     }
 
     /**
@@ -284,19 +301,19 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      *
      * Emits a {Transfer} event.
      */
-    function _burn(uint256 tokenId) internal virtual {
-        address owner = ERC721.ownerOf(tokenId);
+    // function _burn(uint256 tokenId) internal virtual {
+    //     address owner = ERC721.ownerOf(tokenId);
 
-        _beforeTokenTransfer(owner, address(0), tokenId);
+    //     _beforeTokenTransfer(owner, address(0), tokenId);
 
-        // Clear approvals
-        _approve(address(0), tokenId);
+    //     // Clear approvals
+    //     _approve(address(0), tokenId);
 
-        _balances[owner] -= 1;
-        delete _owners[tokenId];
+    //     _balances[owner] -= 1;
+    //     delete _owners[tokenId];
 
-        emit Transfer(owner, address(0), tokenId);
-    }
+    //     emit Transfer(owner, address(0), tokenId);
+    // }
 
     /**
      * @dev Transfers `tokenId` from `from` to `to`.
