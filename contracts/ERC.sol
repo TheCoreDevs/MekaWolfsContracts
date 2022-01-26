@@ -36,10 +36,10 @@ contract AttrTokens is ERC721, IERC {
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) private _attrOperatorApprovals;
 
-    // Mapping from attribute token ID to the NFT it is atached to
-    mapping(uint => uint) _atachedTo;
+    // Mapping from attribute token ID to the NFT it is attached to
+    mapping(uint => uint) _attachedTo;
 
-    // Mapping from NFT ID to atached attribute token IDs
+    // Mapping from NFT ID to attached attribute token IDs
     mapping(uint => uint[8]) internal _attrsOf;
 
     // modifier sameOwner(uint _attrId, uint _tokenId) {
@@ -49,6 +49,10 @@ contract AttrTokens is ERC721, IERC {
     //     );
     //     _;
     // }
+
+    constructor() {
+        attrs.push();
+    }
 
     /**
      * @dev See {IERC165-supportsInterface}.
@@ -60,10 +64,10 @@ contract AttrTokens is ERC721, IERC {
     }
 
     /**
-     * @dev see {ERC-atachedTo}
+     * @dev see {ERC-attachedTo}
      */
-    function atachedTo(uint _attrId) public view returns (uint) {
-        uint tokenId = _atachedTo[_attrId];
+    function attachedTo(uint _attrId) public view returns (uint) {
+        uint tokenId = _attachedTo[_attrId];
         // can't be owned by an adress // can't be 0
         require(_attrOwners[_attrId] == address(0) && tokenId != 0);
         return tokenId;
@@ -74,13 +78,13 @@ contract AttrTokens is ERC721, IERC {
      */
     function ownerOfAttr(uint _attrId) public view returns (address) {
         address owner = _attrOwners[_attrId];
-        // atached to 0 = not atached. owner is 0 = atached. both =  does not exist
-        require(_atachedTo[_attrId] == 0 && owner != address(0), "ERC: Attribute is atached to a token or deos not exist!");
+        // attached to 0 = not attached. owner is 0 = attached. both =  does not exist
+        require(_attachedTo[_attrId] == 0 && owner != address(0), "ERC: Attribute is attached to a token or deos not exist!");
         return owner;
     }
 
     /**
-     * @dev gets the amount of unatached attributes `_owner` holds.
+     * @dev gets the amount of unattached attributes `_owner` holds.
      * NOTE: this mimics the ERC721 `balanceOf` function
      */
     function attrBalanceOf(address _owner) public view returns (uint) {
@@ -88,18 +92,18 @@ contract AttrTokens is ERC721, IERC {
     }
 
     /**
-     * @notice ataches an attribute to an NFT
+     * @notice attaches an attribute to an NFT
      * @dev Throws unless `msg.sender` is the current owner, an authorized 
      *  operator, or the approved address for both the attribute and the NFT.
      *  Throws if `_attrId` is not a valid attribute. Throws if `_tokenId` is
      *  not a valid NFT. Throws an attribute of the same type as `_attrId` is
-     *  already atached to `_tokenId`.
+     *  already attached to `_tokenId`.
      *  Clears the ownership of `_attrId` but does not burn it.
      *  Clears approvals for `_attrId`.
-     * @param _attrId The attribute Id to atach
-     * @param _tokenId The NFT Id to atach to 
+     * @param _attrId The attribute Id to attach
+     * @param _tokenId The NFT Id to attach to 
      */
-	function atach(uint _attrId, uint _tokenId) external payable {
+	function attach(uint _attrId, uint _tokenId) external payable {
         address owner = ownerOfAttr(_attrId);
         require(owner == ownerOf(_tokenId));
         _isApprovedOrAttrOwner(owner, msg.sender, _attrId);
@@ -111,36 +115,36 @@ contract AttrTokens is ERC721, IERC {
 
         _attrBalances[msg.sender]--;
 
-        // atach attribute
-        _atachedTo[_attrId] = _tokenId;
+        // attach attribute
+        _attachedTo[_attrId] = _tokenId;
         _attrsOf[_tokenId][uint(attrs[_attrId].trait_type)] = _attrId;
     }
 
     /**
      * @notice detaches an attribute from an NFT to the NFT owner.
      * @dev Throws unless `msg.sender` is the current owner, an authorized 
-     *  operator, or the approved address of the NFT that the attribute is atached to.
-     *  Throws if `_attrId` is not atached to a token.
+     *  operator, or the approved address of the NFT that the attribute is attached to.
+     *  Throws if `_attrId` is not attached to a token.
      * @param _attrId The attribute Id to dettach 
      */
 	function dettach(uint _attrId) external payable {
-        uint token = atachedTo(_attrId);
+        uint token = attachedTo(_attrId);
         address owner = ownerOf(token);
 
         _isApprovedOrOwner(owner, msg.sender, token);
 
         // before detach
         
-        delete _atachedTo[_attrId];
+        delete _attachedTo[_attrId];
 
         _attrOwners[_attrId] = owner;
         _attrBalances[owner]++;
     }
 
     /**
-     * @notice Replaces the attribute which is atached to an NFT with another
+     * @notice Replaces the attribute which is attached to an NFT with another
      *  attribute of the same type.
-     * @dev Works like {dettach} and {atach} in the same function.
+     * @dev Works like {dettach} and {attach} in the same function.
      */
     function replaceAttr(uint _attrId, uint _tokenId) external payable {
         address owner = ownerOfAttr(_attrId);
@@ -153,19 +157,19 @@ contract AttrTokens is ERC721, IERC {
         // before replace attr
         require(uint(attrType) > 0);
 
-        uint atachedAttr = _attrsOf[_tokenId][uint(attrType)];
+        uint attachedAttr = _attrsOf[_tokenId][uint(attrType)];
         
         // dettach
-        delete _atachedTo[atachedAttr];
+        delete _attachedTo[attachedAttr];
         
-        _attrOwners[atachedAttr] = owner;
+        _attrOwners[attachedAttr] = owner;
 
-        // atach
+        // attach
         delete _attrOwners[_attrId];
         delete _attrTokenApprovals[_attrId];
 
         _attrsOf[_tokenId][uint(attrType)] = _attrId;
-        _atachedTo[_attrId] = _tokenId;
+        _attachedTo[_attrId] = _tokenId;
         
     }
 
@@ -174,7 +178,7 @@ contract AttrTokens is ERC721, IERC {
      * @dev Throws unless `msg.sender` is the current owner, an authorized
      *  operator, or the approved address for this attribute. Throws if `_from` is
      *  not the current owner. Throws if `_to` is the zero address. Throws if
-     *  `_attrId` is not a valid attribute. Throws if `_attrId` is atached to an NFT.
+     *  `_attrId` is not a valid attribute. Throws if `_attrId` is attached to an NFT.
 	 *  When transfer is complete, this function checks if `_to` is a smart contract
 	 *  (code size > 0). If so, it calls `onERCReceived` on `_to` and throws if the
 	 *  return value is not `bytes4(keccak256("onERCReceived(address,address,uint256,bytes)"))`.
@@ -211,7 +215,7 @@ contract AttrTokens is ERC721, IERC {
      * @dev Throws unless `msg.sender` is the current owner, an authorized
      *  operator, or the approved address for this attribute. Throws if `_from` is
      *  not the current owner. Throws if `_to` is the zero address. Throws if
-     *  `_attrId` is not a valid attribute. Throws if `_attrId` is atached to an NFT.
+     *  `_attrId` is not a valid attribute. Throws if `_attrId` is attached to an NFT.
      * @param _from The current owner of the attribute
      * @param _to The new owner
      * @param _attrId The attribute to transfer
@@ -298,7 +302,7 @@ contract AttrTokens is ERC721, IERC {
     }
 
     /**
-     * @dev gets all the attributes that are atached to `_tokenId`.
+     * @dev gets all the attributes that are attached to `_tokenId`.
      * @return an array of attribute type ids
      */
     function attrsOf(uint _tokenId) external view returns (uint[] memory) {
@@ -345,65 +349,53 @@ contract AttrTokens is ERC721, IERC {
         }
     }
 
-    function _mintToAddress(address _to, uint _attrId, TraitType _traitType, uint8 _traitVal) internal {
+    function _mintToAddress(address _to, TraitType _traitType, uint8 _traitVal) internal {
         require(_to != address(0));
-        require(_attrOwners[_attrId] == address(0) &&  _atachedTo[_attrId] == 0, "ERC: attribute id already exists!");
-        // attrs.push(Attr(_traitType, _traitVal));
-        attrs[_attrId] = Attr(_traitType, _traitVal);
+        uint attrId = attrs.length;
+        attrs.push(Attr(_traitType, _traitVal));
 
-        _attrOwners[_attrId] = _to;
+        _attrOwners[attrId] = _to;
         _attrBalances[_to]++;
 
-        emit AttrTransfer(address(0), _to, _attrId);
+        emit AttrTransfer(address(0), _to, attrId);
     }
 
-    function _mintAndAtach(uint _tokenId, uint _attrId, TraitType _traitType, uint8 _traitVal) private {
-        require(_attrOwners[_attrId] == address(0) &&  _atachedTo[_attrId] == 0, "ERC: attribute id already exists!");
+    function _mintAndattach(uint _tokenId, TraitType _traitType, uint8 _traitVal) private {
+        uint attrId = attrs.length;
+        attrs.push(Attr(_traitType, _traitVal));
 
-        attrs[_attrId] = Attr(_traitType, _traitVal);
+        _attachedTo[attrId] = _tokenId;
+        _attrsOf[_tokenId][uint(_traitType)] = attrId;
 
-        _atachedTo[_attrId] = _tokenId;
-        _attrsOf[_tokenId][uint(_traitType)] = _attrId;
-
-        // Attach event goes outside of this method to avoid reading from storage
+        emit Attach(attrId, _tokenId);
     }
 
-    function _mintWithTraits(address to, uint256 _tokenId) internal {
-        require(to != address(0), "ERC721: mint to the zero address");
-        require(!_exists(_tokenId), "ERC721: token already minted");
+    function __partAttrMintFunc(address _to, TraitType _traitType, uint8 _traitVal) private {
+        
+    }
+
+    function _mintWithTraits(address to) internal {
+        uint id = _tokenIdTracker;
 
         _balances[to]++;
-        _owners[_tokenId] = to;
+        __partMintFunc(to, id);
         
-        uint _attrId;
-
         // make a check for 1/1s
 
-        _mintAndAtach(_tokenId, _attrId, TraitType.background, 0 /* randomize with priority */);
-        emit Atach(_attrId, _tokenId, to);
-        _attrId++;
-        _mintAndAtach(_tokenId, _attrId, TraitType.chest, 0 /* randomize with priority */);
-        emit Atach(_attrId, _tokenId, to);
-        _attrId++;
-        _mintAndAtach(_tokenId, _attrId, TraitType.helmet, 0 /* randomize with priority */);
-        emit Atach(_attrId, _tokenId, to);
-        _attrId++;
-        _mintAndAtach(_tokenId, _attrId, TraitType.arms, 0 /* randomize with priority */);
-        emit Atach(_attrId, _tokenId, to);
-        _attrId++;
-        _mintAndAtach(_tokenId, _attrId, TraitType.eyes, 0 /* randomize with priority */);
-        emit Atach(_attrId, _tokenId, to);
-        _attrId++;
-        _mintAndAtach(_tokenId, _attrId, TraitType.snout, 0 /* randomize with priority */);
-        emit Atach(_attrId, _tokenId, to);
-        _attrId++;
-
-
-        emit Transfer(address(0), to, _tokenId);
+        _mintAndattach(id, TraitType.background, 0 /* randomize with priority */);
+        _mintAndattach(id, TraitType.chest, 0 /* randomize with priority */);
+        _mintAndattach(id, TraitType.helmet, 0 /* randomize with priority */);
+        _mintAndattach(id, TraitType.arms, 0 /* randomize with priority */);
+        _mintAndattach(id, TraitType.eyes, 0 /* randomize with priority */);
+        _mintAndattach(id, TraitType.snout, 0 /* randomize with priority */);
     }
 
     function _getRandomNumber() private view returns(uint) {
         return uint(keccak256(abi.encodePacked(block.difficulty, msg.sender)));
+    }
+
+    function totalAttrSupply() external view returns(uint) {
+        return attrs.length;
     }
 
 }

@@ -264,24 +264,25 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      * Emits a {Transfer} event.
      */
     function _mint(address to) internal {
-        uint id = _tokenIdTracker;
         _balances[to]++;
-        __partMintFunc(to, id);
+        __partMintFunc(to, _tokenIdTracker);
+        _tokenIdTracker++;
     }
 
     function _batchMint(address to, uint amount) internal {
         _balances[to] += amount;
-        uint id;
+        uint id = _tokenIdTracker;
         
         for (uint i; i < amount; i++) {
-            id = _tokenIdTracker;
             __partMintFunc(to, id);
+            id++;
         }
+
+        _tokenIdTracker = id;
     }
 
-    function __partMintFunc(address to, uint id) private {
+    function __partMintFunc(address to, uint id) internal {
         _owners[id] = to;
-        _tokenIdTracker++;
 
         emit Transfer(address(0), to, id);
 
@@ -335,8 +336,6 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         require(to != address(0), "ERC721: transfer to the zero address");
         _isApprovedOrOwner(from, _msgSender(), tokenId);
 
-        _beforeTokenTransfer(from, to, tokenId);
-
         // Clear approvals from the previous owner
         _approve(address(0), tokenId);
 
@@ -389,24 +388,4 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
             return true;
         }
     }
-
-    /**
-     * @dev Hook that is called before any token transfer. This includes minting
-     * and burning.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, ``from``'s `tokenId` will be burned.
-     * - `from` and `to` are never both zero.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-     */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal virtual {}
 }

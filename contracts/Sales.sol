@@ -15,7 +15,7 @@ contract Sales is TokenURI, Ownable {
 
     
     uint32 public saleCounter;
-    uint16 public reserve = 888;
+    uint16 public reserve = 2000;
 
     bool public mintingEnabled;
     bool public preMintEnabled;
@@ -57,7 +57,7 @@ contract Sales is TokenURI, Ownable {
             _batchMint(msg.sender, _mintAmount);
             return;
         }
-        require(saleCounter <= 8000, "Request will exceed max supply!");
+        require(saleCounter <= 7000, "Request will exceed max supply!");
         _batchMint(msg.sender, _mintAmount);
     }
 
@@ -66,19 +66,19 @@ contract Sales is TokenURI, Ownable {
         require(!usedSigs[_signature], "Can only use a claim signature once!");
         require(_validiateSig(msg.sender, nonce, _signature), "User not eligable to claim an airdrop!");
         usedSigs[_signature] = true;
-        _mint(msg.sender);
+        _mintWithTraits(msg.sender);
         // addressMintedBalance[msg.sender]++;
         reserve--;
     }
 
-    function ownerMintFromReserve(uint8 amount) external onlyOwner {
+    function mintFromReserve(uint8 amount, address to) external onlyOwner {
         require(reserve >= amount, "Not enough tokens left in reserve!");
-        _batchMint(msg.sender, amount);
+        _batchMint(to, amount);
         reserve -= amount;
     }
 
     function airdropToHolders() external onlyOwner { // might want to change this to work more efficiantly
-        for (uint16 i; i < 1700; i++) _mint(gWolfs.getTokenHolder(i));
+        for (uint16 i; i < 1700; i++) _mintWithTraits(gWolfs.getTokenHolder(i));
         reserve -= 1700;
     }
 
